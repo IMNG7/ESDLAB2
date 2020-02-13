@@ -1,0 +1,37 @@
+DUNFIELD 8051 ASSEMBLER: Nitik_Q1                                     PAGE: 1
+
+0000                         1  ;Timer 1 and Timer 2 are utilized here for
+0000                         2  ; counting up till 65535 and overflowing 
+0000                         3  ; for delay
+0000                         4  	org 0000h
+0000  80 10                  5  	SJMP MAIN
+0002                         6  ISR:		;Interrupt Service Routine for Toggling
+000B                         7  	org 000Bh
+000B  D2 92                  8  	SETB p1.2			;Setting pint 1.2 for ISR Measurement
+000D  B2 91                  9  	cpl p1.1			;Toggling pin 1.1
+000F  C2 92                 10  	clr p1.2			;Setting pint 1.2 for ISR Measurement
+0011  32                    11  	RETI
+0012                        12  MAIN:				
+0012  74 07                 13  	mov A,#07			; Keeping it 7 for running it 7 times
+0014  75 89 10              14  	mov TMOD,#10h			; Setting timer 1 in 16-bit Mode
+0017  75 A8 82              15  	mov IE,#82h
+001A                        16  DELAY:	
+001A  75 8B A0              17  	mov TL1,#0A0h			; Moving A0 to lower bit
+001D  14                    18  	dec A
+001E  75 8D 15              19  	mov TH1,#015h			; Moving 15 to Higher bit for getting
+0021                        20  					;required delay with timerl=5536
+0021  D2 10                 21  	SETB TCON.TR1			;Starting Timer 1
+0023                        22  LOOP: 
+0023  30 10 FD              23  	JNB TCON.TF1,LOOP		; Checking till timer overglows and tf sets itself
+0026  C2 88                 24  	CLR TR1		
+0028  C2 88                 25  	CLR TF1				;Clear Timer 1 flags
+002A  70 EE                 26  	JNZ DELAY
+002C  75 89 01              27  	mov TMOD,#01h			;Setting timer 0 in 16-bit Mode
+002F  75 8A D7              28  	mov TL0,#00D7h
+0032  75 8C 5F              29  	mov TH0,#5Fh
+0035  D2 88                 30  	SETB TR0
+0037                        31  LOOP2: 
+0037  30 88 FD              32  	JNB TF0,LOOP2
+003A  C2 10                 33  	CLR TCON.TR0		;Clear Timer 0 flags
+003C  C2 10                 34  	CLR TCON.TF0		;required delay with timerl=24535
+003E  80 D2                 35  	SJMP MAIN
